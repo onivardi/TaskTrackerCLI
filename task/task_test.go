@@ -16,3 +16,18 @@ func TestTask(t *testing.T) {
 		UpdatedAt:   time.Time{},
 	}
 }
+
+func TestAdd(t *testing.T) {
+	t.Parallel()
+	l := task.ListTask{}
+
+	want := "How to Become Sofware Engineer"
+
+	l.Add(want)
+
+	got := l.Tasks[0].Description
+
+	if want != got {
+		t.Errorf("Want %s, Got %s", want, got)
+	}
+}
