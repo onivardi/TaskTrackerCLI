@@ -13,5 +13,6 @@ func TestTask(t *testing.T) {
 		Id:          1,
 		Description: "My first task",
 		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Time{},
 	}
 }
