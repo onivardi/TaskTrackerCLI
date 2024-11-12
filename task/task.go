@@ -15,32 +15,32 @@ type Task struct {
 }
 
 type ListTask struct {
-	Tasks []Task
+	Tasks map[int]Task
 }
 
 func (lt *ListTask) Add(description string) error {
 	if description == "" {
 		return fmt.Errorf("description cannot be empty; please privide a valid description")
 	}
+	newID := len(lt.Tasks) + 1
 	t := Task{
-		Id:          len(lt.Tasks) + 1,
+		Id:          newID,
 		Description: description,
 		Status:      "todo",
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Time{},
 	}
 
-	lt.Tasks = append(lt.Tasks, t)
+	lt.Tasks[newID] = t
 
 	return nil
 }
 
 func (lt *ListTask) Delete(id int) error {
-	if id <= 0 || id > len(lt.Tasks) {
+	if _, exists := lt.Tasks[id]; !exists {
 		return fmt.Errorf("task ID %d not found; please provide a valid task ID", id)
 	}
-	index := id - 1
-	lt.Tasks = append(lt.Tasks[:index], lt.Tasks[index+1:]...)
+	delete(lt.Tasks, id)
 
 	return nil
 }
