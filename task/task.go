@@ -2,6 +2,7 @@ package task
 
 import (
 	"flag"
+	"fmt"
 	"time"
 )
 
@@ -17,7 +18,10 @@ type ListTask struct {
 	Tasks []Task
 }
 
-func (lt *ListTask) Add(description string) {
+func (lt *ListTask) Add(description string) error {
+	if description == "" {
+		return fmt.Errorf("description cannot be empty; please privide a valid description")
+	}
 	t := Task{
 		Id:          len(lt.Tasks) + 1,
 		Description: description,
@@ -27,6 +31,18 @@ func (lt *ListTask) Add(description string) {
 	}
 
 	lt.Tasks = append(lt.Tasks, t)
+
+	return nil
+}
+
+func (lt *ListTask) Delete(id int) error {
+	if id <= 0 || id > len(lt.Tasks) {
+		return fmt.Errorf("task ID %d not found; please provide a valid task ID", id)
+	}
+	index := id - 1
+	lt.Tasks = append(lt.Tasks[:index], lt.Tasks[index+1:]...)
+
+	return nil
 }
 
 func Main() {
