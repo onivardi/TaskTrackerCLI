@@ -66,7 +66,7 @@ func (lt *ListTask) Get(filename string) error {
 func (lt ListTask) Save(filename string) error {
 	js, err := json.Marshal(lt)
 	if err != nil {
-		return err
+		return fmt.Errorf("cannot save your tasks to file: %w", err)
 	}
 	return os.WriteFile(filename, js, 0644)
 }

@@ -194,6 +194,6 @@ func TestUpdateInvalidInput(t *testing.T) {
 	// empty description
 	err = l.Update(2, "")
 	if err == nil {
-		t.Fatal("want error for invalid id, got nil")
+		t.Fatal("want error for invalid description, got nil")
 	}
 }
