@@ -35,7 +35,7 @@ func (lt *ListTask) Add(description string) error {
 	}
 
 	lt.Tasks[newID] = t
-
+	// defer fmt.Println("Task added successfully (ID:%i)", newID)
 	return nil
 }
 
@@ -69,6 +69,22 @@ func (lt ListTask) Save(filename string) error {
 		return err
 	}
 	return os.WriteFile(filename, js, 0644)
+}
+
+func (lt *ListTask) Update(id int, description string) error {
+	if _, exists := lt.Tasks[id]; !exists {
+		return fmt.Errorf("task ID %d not found; please provide a valid task ID", id)
+	}
+
+	if description == "" {
+		return fmt.Errorf("description cannot be empty; please privide a valid description")
+	}
+
+	d := lt.Tasks[id]
+	d.Description = description
+	lt.Tasks[id] = d
+
+	return nil
 }
 
 func Main() {
