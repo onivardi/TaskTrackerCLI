@@ -1,6 +1,10 @@
 package task_test
 
 import (
+	"encoding/json"
+	"log"
+	"os"
+	"reflect"
 	"testing"
 	"time"
 
@@ -78,19 +82,88 @@ func TestDelete(t *testing.T) {
 	}
 }
 
-// func TestDeleteInvalidInputID(t *testing.T) {
-// 	t.Parallel()
-// 	l := task.ListTask{}
-//
-// 	tasks := []string{
-// 		"build todo list cli",
-// 		"learn how to test in go",
-// 	}
-// 	for _, t := range tasks {
-// 		_ = l.Add(t)
-// 	}
-// 	err := l.Delete(0)
-// 	if err == nil {
-// 		t.Fatal("want error for invalid id, got nil")
-// 	}
-// }
+func TestDeleteInvalidInputID(t *testing.T) {
+	t.Parallel()
+	l := task.ListTask{
+		Tasks: make(map[int]task.Task),
+	}
+
+	tasks := []string{
+		"build todo list cli",
+		"learn how to test in go",
+	}
+	for _, t := range tasks {
+		_ = l.Add(t)
+	}
+	err := l.Delete(0)
+	if err == nil {
+		t.Fatal("want error for invalid id, got nil")
+	}
+}
+
+func TestGet(t *testing.T) {
+	t.Parallel()
+
+	l := task.ListTask{
+		Tasks: make(map[int]task.Task),
+	}
+
+	ts := task.Task{
+		Id:          1,
+		Description: "build todo list cli",
+	}
+
+	l.Tasks[ts.Id] = ts
+
+	// Simulating a saving json file
+	tempFile, err := os.CreateTemp("", "testData.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(tempFile.Name())
+	defer tempFile.Close()
+
+	jsonData, err := json.MarshalIndent(l.Tasks, "", "  ")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = tempFile.Write(jsonData)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// ------------------------------
+
+	err = l.Get(tempFile.Name())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := map[int]task.Task{
+		1: {Id: 1, Description: "build todo list cli"},
+	}
+	got := l.Tasks
+
+	if !reflect.DeepEqual(got, expected) {
+		t.Errorf("Expected %v, got %v", expected, got)
+	}
+}
+
+func TestGetFileNotExist(t *testing.T) {
+	l := task.ListTask{
+		Tasks: make(map[int]task.Task),
+	}
+
+	// Simulating a saving json file
+	tempFile, err := os.CreateTemp("", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(tempFile.Name())
+	defer tempFile.Close()
+
+	err = l.Get(tempFile.Name())
+	if err == nil {
+		t.Fatal("want file does not exist, got nil")
+	}
+}

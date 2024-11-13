@@ -1,8 +1,11 @@
 package task
 
 import (
+	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
+	"os"
 	"time"
 )
 
@@ -43,6 +46,21 @@ func (lt *ListTask) Delete(id int) error {
 	delete(lt.Tasks, id)
 
 	return nil
+}
+
+// Read a json file and load to the ListTask map
+func (lt *ListTask) Get(filename string) error {
+	file, err := os.ReadFile(filename)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("file does not exist, create one on current directory")
+		}
+		return err
+	}
+	if len(file) == 0 {
+		return fmt.Errorf("There is no task added")
+	}
+	return json.Unmarshal(file, lt)
 }
 
 func Main() {
