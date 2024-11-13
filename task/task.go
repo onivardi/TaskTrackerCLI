@@ -17,8 +17,9 @@ const (
 	InProgress
 )
 
+// only update between done and inProgress
 var validStatus = map[Status]bool{
-	Todo:       true,
+	Todo:       false,
 	Done:       true,
 	InProgress: true,
 }
@@ -26,7 +27,7 @@ var validStatus = map[Status]bool{
 type Task struct {
 	Id          int
 	Description string
-	status      Status
+	Status      Status
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
@@ -43,8 +44,8 @@ func (lt *ListTask) Add(description string) error {
 	t := Task{
 		Id:          newID,
 		Description: description,
-		status:      Todo,
-		CreatedAt:   time.Now(),
+		Status:      Todo,
+		CreatedAt:   time.Time{},
 		UpdatedAt:   time.Time{},
 	}
 
@@ -63,7 +64,7 @@ func (lt *ListTask) Delete(id int) error {
 }
 
 // Read a json file and load to the ListTask map
-func (lt *ListTask) Get(filename string) error {
+func (lt *ListTask) GetAll(filename string) error {
 	file, err := os.ReadFile(filename)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
@@ -75,6 +76,19 @@ func (lt *ListTask) Get(filename string) error {
 		return fmt.Errorf("There is no task added")
 	}
 	return json.Unmarshal(file, lt)
+}
+
+func (lt ListTask) GetTasksByStatus(status Status) (map[int]Task, error) {
+	if !validStatus[status] {
+		return nil, fmt.Errorf("invalid status; please provide a valid status")
+	}
+	tasks := make(map[int]Task)
+	for id, task := range lt.Tasks {
+		if task.Status == status {
+			tasks[id] = task
+		}
+	}
+	return tasks, nil
 }
 
 func (lt ListTask) Save(filename string) error {
@@ -111,13 +125,13 @@ func (lt *ListTask) UpdateStatus(id int, status Status) error {
 	}
 
 	t := lt.Tasks[id]
-	t.status = status
+	t.Status = status
 	lt.Tasks[id] = t
 	return nil
 }
 
 func (t Task) GetStatus() Status {
-	return t.status
+	return t.Status
 }
 
 func Main() {

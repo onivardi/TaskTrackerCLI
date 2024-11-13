@@ -101,13 +101,13 @@ func TestGetFileNotExist(t *testing.T) {
 	defer os.Remove(tempFile.Name())
 	defer tempFile.Close()
 
-	err = l.Get(tempFile.Name())
+	err = l.GetAll(tempFile.Name())
 	if err == nil {
 		t.Fatal("want file does not exist, got nil")
 	}
 }
 
-func TestSaveAndGet(t *testing.T) {
+func TestSaveAndGetAll(t *testing.T) {
 	t.Parallel()
 
 	l := task.ListTask{
@@ -123,7 +123,7 @@ func TestSaveAndGet(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error saving list to file: %s", err)
 	}
-	err = l.Get("testData.json")
+	err = l.GetAll("testData.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -218,6 +218,44 @@ func TestUpdateStatusInvalidInput(t *testing.T) {
 	}
 
 	err = l.UpdateStatus(1, 999)
+	if err == nil {
+		t.Fatal("want error for invalid status, got nil")
+	}
+}
+
+func TestGetTaskByStatus(t *testing.T) {
+	t.Parallel()
+
+	l := task.ListTask{Tasks: make(map[int]task.Task)}
+	l.Add("test")
+	l.UpdateStatus(1, 1)
+	l.Add("test2")
+	l.UpdateStatus(2, 1)
+	l.Add("test3")
+	l.Add("test4")
+
+	want := map[int]task.Task{
+		1: {Id: 1, Description: "test", Status: 1},
+		2: {Id: 2, Description: "test2", Status: 1},
+	}
+	got, err := l.GetTasksByStatus(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("want %v, got %v", want, got)
+	}
+}
+
+func TestGetTaskByStatusInvalidInput(t *testing.T) {
+	t.Parallel()
+
+	l := task.ListTask{Tasks: make(map[int]task.Task)}
+	l.Add("test")
+	l.UpdateStatus(1, 1)
+
+	_, err := l.GetTasksByStatus(999)
 	if err == nil {
 		t.Fatal("want error for invalid status, got nil")
 	}
