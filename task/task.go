@@ -63,6 +63,14 @@ func (lt *ListTask) Get(filename string) error {
 	return json.Unmarshal(file, lt)
 }
 
+func (lt ListTask) Save(filename string) error {
+	js, err := json.Marshal(lt)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(filename, js, 0644)
+}
+
 func Main() {
 	// task := flag.String("add", "", "Add a task")
 	// delete := flag.Int("delete", -1, "Delete a task on given ID")

@@ -1,8 +1,6 @@
 package task_test
 
 import (
-	"encoding/json"
-	"log"
 	"os"
 	"reflect"
 	"testing"
@@ -101,55 +99,8 @@ func TestDeleteInvalidInputID(t *testing.T) {
 	}
 }
 
-func TestGet(t *testing.T) {
-	t.Parallel()
-
-	l := task.ListTask{
-		Tasks: make(map[int]task.Task),
-	}
-
-	ts := task.Task{
-		Id:          1,
-		Description: "build todo list cli",
-	}
-
-	l.Tasks[ts.Id] = ts
-
-	// Simulating a saving json file
-	tempFile, err := os.CreateTemp("", "testData.json")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.Remove(tempFile.Name())
-	defer tempFile.Close()
-
-	jsonData, err := json.MarshalIndent(l.Tasks, "", "  ")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	_, err = tempFile.Write(jsonData)
-	if err != nil {
-		log.Fatal(err)
-	}
-	// ------------------------------
-
-	err = l.Get(tempFile.Name())
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	expected := map[int]task.Task{
-		1: {Id: 1, Description: "build todo list cli"},
-	}
-	got := l.Tasks
-
-	if !reflect.DeepEqual(got, expected) {
-		t.Errorf("Expected %v, got %v", expected, got)
-	}
-}
-
 func TestGetFileNotExist(t *testing.T) {
+	t.Parallel()
 	l := task.ListTask{
 		Tasks: make(map[int]task.Task),
 	}
@@ -165,5 +116,35 @@ func TestGetFileNotExist(t *testing.T) {
 	err = l.Get(tempFile.Name())
 	if err == nil {
 		t.Fatal("want file does not exist, got nil")
+	}
+}
+
+func TestSaveAndGet(t *testing.T) {
+	t.Parallel()
+
+	l := task.ListTask{
+		Tasks: make(map[int]task.Task),
+	}
+	ts := task.Task{
+		Id:          1,
+		Description: "build todo list cli",
+	}
+	l.Tasks[ts.Id] = ts
+
+	err := l.Save("testData.json")
+	if err != nil {
+		t.Fatalf("Error saving list to file: %s", err)
+	}
+	err = l.Get("testData.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := map[int]task.Task{
+		1: {Id: 1, Description: "build todo list cli"},
+	}
+	got := l.Tasks
+	if !reflect.DeepEqual(got, expected) {
+		t.Errorf("Expected %v, got %v", expected, got)
 	}
 }
