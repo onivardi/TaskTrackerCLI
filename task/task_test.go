@@ -4,21 +4,9 @@ import (
 	"os"
 	"reflect"
 	"testing"
-	"time"
 
 	"github.com/onivardi/TaskTrackerCLI/task"
 )
-
-func TestTask(t *testing.T) {
-	t.Parallel()
-	_ = task.Task{
-		Id:          1,
-		Description: "My first task",
-		Status:      "todo",
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Time{},
-	}
-}
 
 func TestAdd(t *testing.T) {
 	t.Parallel()
@@ -163,7 +151,11 @@ func TestUpdate(t *testing.T) {
 		_ = l.Add(t)
 	}
 
-	l.Update(1, "update description")
+	err := l.Update(1, "update description")
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	got := l.Tasks[1].Description
 	want := "update description"
 	if got != want {
@@ -195,5 +187,38 @@ func TestUpdateInvalidInput(t *testing.T) {
 	err = l.Update(2, "")
 	if err == nil {
 		t.Fatal("want error for invalid description, got nil")
+	}
+}
+
+func TestUpdateStatus(t *testing.T) {
+	t.Parallel()
+
+	l := task.ListTask{Tasks: make(map[int]task.Task)}
+	l.Add("test")
+
+	err := l.UpdateStatus(1, 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want := task.InProgress
+	got := l.Tasks[1].GetStatus()
+	if want != got {
+		t.Errorf("want %v, got %v", want, got)
+	}
+}
+
+func TestUpdateStatusInvalidInput(t *testing.T) {
+	t.Parallel()
+	l := task.ListTask{Tasks: make(map[int]task.Task)}
+	l.Add("test")
+	err := l.UpdateStatus(0, 1)
+	if err == nil {
+		t.Fatal("want error for invalid id, got nil")
+	}
+
+	err = l.UpdateStatus(1, 999)
+	if err == nil {
+		t.Fatal("want error for invalid status, got nil")
 	}
 }

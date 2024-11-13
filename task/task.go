@@ -9,10 +9,24 @@ import (
 	"time"
 )
 
+type Status int
+
+const (
+	Todo Status = iota
+	Done
+	InProgress
+)
+
+var validStatus = map[Status]bool{
+	Todo:       true,
+	Done:       true,
+	InProgress: true,
+}
+
 type Task struct {
 	Id          int
 	Description string
-	Status      string
+	status      Status
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
@@ -29,7 +43,7 @@ func (lt *ListTask) Add(description string) error {
 	t := Task{
 		Id:          newID,
 		Description: description,
-		Status:      "todo",
+		status:      Todo,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Time{},
 	}
@@ -85,6 +99,25 @@ func (lt *ListTask) Update(id int, description string) error {
 	lt.Tasks[id] = d
 
 	return nil
+}
+
+func (lt *ListTask) UpdateStatus(id int, status Status) error {
+	if _, exists := lt.Tasks[id]; !exists {
+		return fmt.Errorf("task ID %d not found; please provide a valid task ID", id)
+	}
+
+	if !validStatus[status] {
+		return fmt.Errorf("invalid status; please provide a valid status")
+	}
+
+	t := lt.Tasks[id]
+	t.status = status
+	lt.Tasks[id] = t
+	return nil
+}
+
+func (t Task) GetStatus() Status {
+	return t.status
 }
 
 func Main() {
