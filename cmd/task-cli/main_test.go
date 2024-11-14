@@ -55,4 +55,11 @@ func TestTaskCLI(t *testing.T) {
 			t.Fatal(err)
 		}
 	})
+
+	t.Run("ListAllTasks", func(t *testing.T) {
+		cmd := exec.Command(cmdPath, "-list")
+		if err := cmd.Run(); err != nil {
+			t.Fatal(err)
+		}
+	})
 }

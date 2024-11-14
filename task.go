@@ -141,6 +141,7 @@ func (t Task) GetStatus() Status {
 
 func Main() int {
 	task := flag.String("add", "", "Add a task")
+	list := flag.Bool("list", false, "List all tasks")
 	// delete := flag.Int("delete", -1, "Delete a task on given ID")
 
 	// Flags for updating a task
@@ -151,16 +152,20 @@ func Main() int {
 	flag.Parse()
 
 	lt := &ListTask{Tasks: make(map[int]Task)}
-	os.Create("tasks.json")
 	if err := lt.GetAll(fileName); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return 1
 	}
 
 	switch {
+	case *list:
+
+		for id, item := range lt.Tasks {
+			fmt.Printf("%s (ID: %d)", item.Description, id)
+		}
 	case *task != "":
+
 		lt.Add(*task)
-		// TODO: Should print the task added with ID
 
 		if err := lt.Save(fileName); err != nil {
 			fmt.Fprintln(os.Stderr, err)
