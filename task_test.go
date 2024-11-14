@@ -8,6 +8,8 @@ import (
 	task "github.com/onivardi/TaskTrackerCLI"
 )
 
+// TODO: Update the all tests
+
 func TestAdd(t *testing.T) {
 	t.Parallel()
 	l := task.ListTask{
@@ -208,16 +210,23 @@ func TestUpdateStatusInvalidInput(t *testing.T) {
 	}
 }
 
+// FIXME: its returning createdAt and updatedAt
+// INFO: Fixed
 func TestGetTaskByStatus(t *testing.T) {
 	t.Parallel()
 
-	l := task.ListTask{Tasks: make(map[int]task.Task)}
-	l.Add("test")
-	l.UpdateStatus(1, 1)
-	l.Add("test2")
-	l.UpdateStatus(2, 1)
-	l.Add("test3")
-	l.Add("test4")
+	l := task.ListTask{Tasks: map[int]task.Task{
+		1: {Id: 1, Description: "test", Status: 1},
+		2: {Id: 2, Description: "test2", Status: 1},
+		3: {Id: 3, Description: "test3", Status: 0},
+		4: {Id: 4, Description: "test4", Status: 2},
+	}}
+	// l.Add("test")
+	// l.UpdateStatus(1, 1)
+	// l.Add("test2")
+	// l.UpdateStatus(2, 1)
+	// l.Add("test3")
+	// l.Add("test4")
 
 	want := map[int]task.Task{
 		1: {Id: 1, Description: "test", Status: 1},
@@ -233,12 +242,16 @@ func TestGetTaskByStatus(t *testing.T) {
 	}
 }
 
+// FIXME: its returning createdAt and updatedAt
+// INFO: Fixed
 func TestGetTaskByStatusInvalidInput(t *testing.T) {
 	t.Parallel()
 
-	l := task.ListTask{Tasks: make(map[int]task.Task)}
-	l.Add("test")
-	l.UpdateStatus(1, 1)
+	l := task.ListTask{Tasks: map[int]task.Task{
+		1: {Id: 1, Description: "test", Status: 1},
+	}}
+	// l.Add("test")
+	// l.UpdateStatus(1, 1)
 
 	_, err := l.GetTasksByStatus(999)
 	if err == nil {
