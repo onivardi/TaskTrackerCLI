@@ -141,18 +141,29 @@ func (t Task) GetStatus() Status {
 
 // String prints out a formatted list
 // Implements the fmt.Stringer interface
-// func (lt *ListTask) String() string {
-// 	formatted := ""
-// 	for k, t := range lt.Tasks {
-// 		prefix := " "
-// 		if t.Done {
-// 			prefix = "X "
-// 		}
-// 		// Adjust the item number k to print numbers starting from 1 instead of 0
-// 		formatted += fmt.Sprintf("%s%d: %s\n", prefix, k+1, t.Task)
-// 	}
-// 	return formatted
-// }
+// INFO: Every time the fmt.Print() is called, will be formatted
+func (lt *ListTask) String() string {
+	formatted := ""
+	for _, t := range lt.Tasks {
+		prefix := "" // Symbol for incomplete tasks
+
+		switch t.Status {
+		case Done:
+
+			prefix = "✅ " // Symbol for completed tasks
+		case InProgress:
+
+			prefix = "🚧 " // Symbol for in progress tasks
+		default:
+
+			prefix = "⬜" // Symbol for incomplete tasks
+		}
+
+		// Adjust the item number k to print numbers starting from 1 instead of 0
+		formatted += fmt.Sprintf("%s- %s (ID: %d)\n", prefix, t.Description, t.Id)
+	}
+	return formatted
+}
 
 func Main() int {
 	add := flag.String("add", "", "Add a task")
@@ -175,9 +186,10 @@ func Main() int {
 	switch {
 	case *list:
 
-		for id, item := range lt.Tasks {
-			fmt.Printf("%s (ID: %d)", item.Description, id)
-		}
+		// for id, item := range lt.Tasks {
+		// 	fmt.Printf("%s (ID: %d)", item.Description, id)
+		// }
+		fmt.Print(lt)
 	case *add != "":
 
 		lt.Add(*add)
