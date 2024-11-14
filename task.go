@@ -47,8 +47,7 @@ func (lt *ListTask) Add(description string) error {
 		Id:          newID,
 		Description: description,
 		Status:      Todo,
-		CreatedAt:   time.Time{},
-		UpdatedAt:   time.Time{},
+		CreatedAt:   time.Now(),
 	}
 
 	lt.Tasks[newID] = t
@@ -66,8 +65,8 @@ func (lt *ListTask) Delete(id int) error {
 }
 
 // Read a json file and load to the ListTask map
-// FIXME: not letting the user to add tasks
-// INFO: the bug was fixed
+// FIXME: Not letting the user add tasks
+// INFO: Fixed
 func (lt *ListTask) GetAll(filename string) error {
 	file, err := os.ReadFile(filename)
 	if err != nil {
@@ -103,6 +102,7 @@ func (lt ListTask) Save(filename string) error {
 	return os.WriteFile(filename, js, 0644)
 }
 
+// TODO: Should update the updatedAt attribute too
 func (lt *ListTask) Update(id int, description string) error {
 	if _, exists := lt.Tasks[id]; !exists {
 		return fmt.Errorf("task ID %d not found; please provide a valid task ID", id)
@@ -119,6 +119,7 @@ func (lt *ListTask) Update(id int, description string) error {
 	return nil
 }
 
+// TODO: Should update the updatedAt attribute too
 func (lt *ListTask) UpdateStatus(id int, status Status) error {
 	if _, exists := lt.Tasks[id]; !exists {
 		return fmt.Errorf("task ID %d not found; please provide a valid task ID", id)
@@ -159,6 +160,7 @@ func Main() int {
 	switch {
 	case *task != "":
 		lt.Add(*task)
+		// TODO: Should print the task added with ID
 
 		if err := lt.Save(fileName); err != nil {
 			fmt.Fprintln(os.Stderr, err)
