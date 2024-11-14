@@ -17,6 +17,8 @@ const (
 	InProgress
 )
 
+const fileName = "tasks.json"
+
 // only update between done and inProgress
 var validStatus = map[Status]bool{
 	Todo:       false,
@@ -64,16 +66,18 @@ func (lt *ListTask) Delete(id int) error {
 }
 
 // Read a json file and load to the ListTask map
+// FIXME: not letting the user to add tasks
+// INFO: the bug was fixed
 func (lt *ListTask) GetAll(filename string) error {
 	file, err := os.ReadFile(filename)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return fmt.Errorf("file does not exist, create one on current directory")
+			return nil
 		}
 		return err
 	}
 	if len(file) == 0 {
-		return fmt.Errorf("There is no task added")
+		return nil
 	}
 	return json.Unmarshal(file, lt)
 }
@@ -134,8 +138,8 @@ func (t Task) GetStatus() Status {
 	return t.Status
 }
 
-func Main() {
-	// task := flag.String("add", "", "Add a task")
+func Main() int {
+	task := flag.String("add", "", "Add a task")
 	// delete := flag.Int("delete", -1, "Delete a task on given ID")
 
 	// Flags for updating a task
@@ -144,4 +148,27 @@ func Main() {
 	// status := flag.Int("status", -1, "Update the status on the task.: Use 0 for todo, 1 for in-progress, 2 for done")
 
 	flag.Parse()
+
+	lt := &ListTask{Tasks: make(map[int]Task)}
+	os.Create("tasks.json")
+	if err := lt.GetAll(fileName); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return 1
+	}
+
+	switch {
+	case *task != "":
+		lt.Add(*task)
+
+		if err := lt.Save(fileName); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			return 1
+		}
+	default:
+		// Invalid flag provided
+		fmt.Fprintln(os.Stderr, "Invalid option")
+		return 1
+	}
+
+	return 0
 }

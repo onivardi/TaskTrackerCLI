@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/onivardi/TaskTrackerCLI/task"
+	task "github.com/onivardi/TaskTrackerCLI"
 )
 
 func TestAdd(t *testing.T) {
@@ -84,26 +84,6 @@ func TestDeleteInvalidInputID(t *testing.T) {
 	err := l.Delete(0)
 	if err == nil {
 		t.Fatal("want error for invalid id, got nil")
-	}
-}
-
-func TestGetFileNotExist(t *testing.T) {
-	t.Parallel()
-	l := task.ListTask{
-		Tasks: make(map[int]task.Task),
-	}
-
-	// Simulating a saving json file
-	tempFile, err := os.CreateTemp("", "")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.Remove(tempFile.Name())
-	defer tempFile.Close()
-
-	err = l.GetAll(tempFile.Name())
-	if err == nil {
-		t.Fatal("want file does not exist, got nil")
 	}
 }
 
