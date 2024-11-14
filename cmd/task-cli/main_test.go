@@ -62,4 +62,11 @@ func TestTaskCLI(t *testing.T) {
 			t.Fatal(err)
 		}
 	})
+
+	t.Run("DeleteTask", func(t *testing.T) {
+		cmd := exec.Command(cmdPath, "-delete", "1")
+		if err := cmd.Run(); err != nil {
+			t.Fatal(err)
+		}
+	})
 }

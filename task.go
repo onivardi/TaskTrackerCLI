@@ -51,7 +51,7 @@ func (lt *ListTask) Add(description string) error {
 	}
 
 	lt.Tasks[newID] = t
-	// defer fmt.Println("Task added successfully (ID:%i)", newID)
+	defer fmt.Printf("Task added successfully (ID: %d)", newID)
 	return nil
 }
 
@@ -139,10 +139,25 @@ func (t Task) GetStatus() Status {
 	return t.Status
 }
 
+// String prints out a formatted list
+// Implements the fmt.Stringer interface
+// func (lt *ListTask) String() string {
+// 	formatted := ""
+// 	for k, t := range lt.Tasks {
+// 		prefix := " "
+// 		if t.Done {
+// 			prefix = "X "
+// 		}
+// 		// Adjust the item number k to print numbers starting from 1 instead of 0
+// 		formatted += fmt.Sprintf("%s%d: %s\n", prefix, k+1, t.Task)
+// 	}
+// 	return formatted
+// }
+
 func Main() int {
-	task := flag.String("add", "", "Add a task")
+	add := flag.String("add", "", "Add a task")
 	list := flag.Bool("list", false, "List all tasks")
-	// delete := flag.Int("delete", -1, "Delete a task on given ID")
+	delete := flag.Int("delete", -1, "Delete a task on given ID")
 
 	// Flags for updating a task
 	// taskID := flag.Int("id", -1, "Task ID to update. Work with -description and -status")
@@ -163,9 +178,17 @@ func Main() int {
 		for id, item := range lt.Tasks {
 			fmt.Printf("%s (ID: %d)", item.Description, id)
 		}
-	case *task != "":
+	case *add != "":
 
-		lt.Add(*task)
+		lt.Add(*add)
+
+		if err := lt.Save(fileName); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			return 1
+		}
+	case *delete > 0:
+
+		lt.Delete(*delete)
 
 		if err := lt.Save(fileName); err != nil {
 			fmt.Fprintln(os.Stderr, err)
