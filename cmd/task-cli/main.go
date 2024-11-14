@@ -1,7 +1,11 @@
 package main
 
-import "os"
+import (
+	"os"
+
+	task "github.com/onivardi/TaskTrackerCLI"
+)
 
 func main() {
-	os.Exit(1)
+	os.Exit(task.Main())
 }
