@@ -119,11 +119,16 @@ func TestSaveAndGetAll(t *testing.T) {
 	}
 	l.Tasks[ts.Id] = ts
 
-	err := l.Save("testData.json")
+	tempFile, err := os.CreateTemp("", "testData.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = l.Save(tempFile.Name())
 	if err != nil {
 		t.Fatalf("Error saving list to file: %s", err)
 	}
-	err = l.GetAll("testData.json")
+	err = l.GetAll(tempFile.Name())
 	if err != nil {
 		t.Fatal(err)
 	}
