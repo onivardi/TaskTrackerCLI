@@ -174,107 +174,147 @@ func (lt ListTask) String() string {
 func Main() int {
 	add := flag.String("add", "", "Add a task")
 	list := flag.Bool("list", false, "List all tasks")
-	delete := flag.Int("delete", -1, "Delete a task on given ID")
-	markInProgress := flag.Int("markInProgress", -1, "Mark a task on given ID as in progress")
-	markDone := flag.Int("markDone", -1, "Mark a task on given ID as done")
-	update := flag.Bool("update", false, "Update a task on given ID")
+	delete := flag.Int("delete", -1, "Delete a task on the given ID")
+	markInProgress := flag.Int("markInProgress", -1, "Mark a task on the given ID as in progress")
+	markDone := flag.Int("markDone", -1, "Mark a task on the given ID as done")
+	update := flag.Bool("update", false, "Update a task on the given ID")
 
-	// Flags for updating a task
-	// taskID := flag.Int("id", -1, "Task ID to update. Work with -description and -status")
-	// newDescription := flag.String("description", "", "New description for the task")
-	// status := flag.Int("status", -1, "Update the status on the task.: Use 0 for todo, 1 for in-progress, 2 for done")
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, `Usage of task-cli:
+  -add <task_description>       Add a new task with the given description.
+  -list [done|in-progress|todo] List tasks filtered by status or all tasks if no filter is specified.
+  -delete <task_id>             Delete the task with the specified ID.
+  -markInProgress <task_id>     Mark the task with the specified ID as "In Progress".
+  -markDone <task_id>           Mark the task with the specified ID as "Done".
+  -update <task_id> <description> 
+                                 Update the description of the task with the specified ID.
 
+Examples:
+  Add a task:
+    task-cli -add "Buy groceries"
+
+  List all tasks:
+    task-cli -list
+
+  List tasks by status:
+    task-cli -list done
+    task-cli -list in-progress
+    task-cli -list todo
+
+  Delete a task:
+    task-cli -delete 3
+
+  Update a task description:
+    task-cli -update 2 "Pick up laundry"
+
+  Mark a task as in progress:
+    task-cli -markInProgress 5
+
+  Mark a task as done:
+    task-cli -markDone 6
+`)
+	}
 	flag.Parse()
 	lt := &ListTask{Tasks: make(map[int]Task)}
+
+	// Load existing tasks from file
 	if err := lt.GetAll(fileName); err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		fmt.Fprintln(os.Stderr, "Error loading tasks:", err)
 		return 1
 	}
 
 	switch {
 	case *list:
 		args := flag.Args()
-
 		if len(args) > 0 {
 			switch args[0] {
 			case "done":
 				tasks, _ := lt.GetTasksByStatus(Done)
+				fmt.Println("Tasks marked as Done:")
 				fmt.Print(tasks)
-
 			case "in-progress":
 				tasks, _ := lt.GetTasksByStatus(InProgress)
+				fmt.Println("Tasks in Progress:")
 				fmt.Print(tasks)
-
 			case "todo":
 				validStatus[Todo] = true
 				tasks, _ := lt.GetTasksByStatus(Todo)
+				fmt.Println("Tasks To-Do:")
 				fmt.Print(tasks)
-
 				validStatus[Todo] = false
 			default:
-				fmt.Println("Invalid list option. Use 'done' or 'inprogress'")
+				fmt.Println("Invalid list option. Use 'done', 'in-progress', or 'todo'.")
 			}
 		} else {
+			fmt.Println("All tasks:")
 			fmt.Print(lt)
 		}
 
 	case *add != "":
 		lt.Add(*add)
-
 		if err := lt.Save(fileName); err != nil {
-			fmt.Fprintln(os.Stderr, err)
+			fmt.Fprintln(os.Stderr, "Error saving tasks:", err)
 			return 1
 		}
+		fmt.Println("Task added successfully!")
 
 	case *delete > 0:
-		lt.Delete(*delete)
-
-		if err := lt.Save(fileName); err != nil {
-			fmt.Fprintln(os.Stderr, err)
+		if err := lt.Delete(*delete); err != nil {
+			fmt.Fprintln(os.Stderr, "Error deleting task:", err)
 			return 1
 		}
+		if err := lt.Save(fileName); err != nil {
+			fmt.Fprintln(os.Stderr, "Error saving tasks:", err)
+			return 1
+		}
+		fmt.Println("Task deleted successfully!")
 
 	case *update:
 		args := flag.Args()
 		if len(args) < 2 {
+			fmt.Fprintln(os.Stderr, "Invalid arguments. Usage: -update <ID> <new description>")
 			return 1
 		}
-
-		// Validate task ID
 		taskID, err := strconv.Atoi(args[0])
 		if err != nil || taskID <= 0 {
 			fmt.Fprintln(os.Stderr, "Invalid task ID")
 			return 1
 		}
-
 		description := args[1]
-
-		lt.Update(taskID, description)
-		if err := lt.Save(fileName); err != nil {
-			fmt.Fprintln(os.Stderr, err)
+		if err := lt.Update(taskID, description); err != nil {
+			fmt.Fprintln(os.Stderr, "Error updating task:", err)
 			return 1
 		}
-		fmt.Println("Task updated successfully")
+		if err := lt.Save(fileName); err != nil {
+			fmt.Fprintln(os.Stderr, "Error saving tasks:", err)
+			return 1
+		}
+		fmt.Println("Task updated successfully!")
 
 	case *markInProgress > 0:
-		lt.UpdateStatus(*markInProgress, InProgress)
-
-		if err := lt.Save(fileName); err != nil {
-			fmt.Fprintln(os.Stderr, err)
+		if err := lt.UpdateStatus(*markInProgress, InProgress); err != nil {
+			fmt.Fprintln(os.Stderr, "Error marking task as in progress:", err)
 			return 1
 		}
+		if err := lt.Save(fileName); err != nil {
+			fmt.Fprintln(os.Stderr, "Error saving tasks:", err)
+			return 1
+		}
+		fmt.Println("Task marked as In Progress!")
 
 	case *markDone > 0:
-		lt.UpdateStatus(*markDone, Done)
-
-		if err := lt.Save(fileName); err != nil {
-			fmt.Fprintln(os.Stderr, err)
+		if err := lt.UpdateStatus(*markDone, Done); err != nil {
+			fmt.Fprintln(os.Stderr, "Error marking task as done:", err)
 			return 1
 		}
+		if err := lt.Save(fileName); err != nil {
+			fmt.Fprintln(os.Stderr, "Error saving tasks:", err)
+			return 1
+		}
+		fmt.Println("Task marked as Done!")
 
 	default:
-		// Invalid flag provided
-		fmt.Fprintln(os.Stderr, "Invalid option")
+		fmt.Fprintln(os.Stderr, "Invalid option. Use -h for help.")
 		return 1
 	}
 
