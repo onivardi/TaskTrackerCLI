@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -176,6 +177,7 @@ func Main() int {
 	delete := flag.Int("delete", -1, "Delete a task on given ID")
 	markInProgress := flag.Int("markInProgress", -1, "Mark a task on given ID as in progress")
 	markDone := flag.Int("markDone", -1, "Mark a task on given ID as done")
+	update := flag.Bool("update", false, "Update a task on given ID")
 
 	// Flags for updating a task
 	// taskID := flag.Int("id", -1, "Task ID to update. Work with -description and -status")
@@ -183,7 +185,6 @@ func Main() int {
 	// status := flag.Int("status", -1, "Update the status on the task.: Use 0 for todo, 1 for in-progress, 2 for done")
 
 	flag.Parse()
-
 	lt := &ListTask{Tasks: make(map[int]Task)}
 	if err := lt.GetAll(fileName); err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -192,26 +193,30 @@ func Main() int {
 
 	switch {
 	case *list:
-		// args := flag.Args()
+		args := flag.Args()
 
-		// if len(args) > 0 {
-		// 	switch args[0] {
-		// 	case "done":
-		// 		tasks, _ := lt.GetTasksByStatus(Done)
-		// 		fmt.Print(tasks)
-		//
-		// 	case "in-progress":
-		// 		tasks, _ := lt.GetTasksByStatus(InProgress)
-		// 		fmt.Print(tasks)
-		//
-		// 	default:
-		// 		fmt.Println("Invalid list option. Use 'done' or 'inprogress'")
-		// 	}
-		// }
+		if len(args) > 0 {
+			switch args[0] {
+			case "done":
+				tasks, _ := lt.GetTasksByStatus(Done)
+				fmt.Print(tasks)
 
-		// tasks, _ := lt.GetTasksByStatus(Done)
-		// lt.Tasks = tasks
-		fmt.Print(lt)
+			case "in-progress":
+				tasks, _ := lt.GetTasksByStatus(InProgress)
+				fmt.Print(tasks)
+
+			case "todo":
+				validStatus[Todo] = true
+				tasks, _ := lt.GetTasksByStatus(Todo)
+				fmt.Print(tasks)
+
+				validStatus[Todo] = false
+			default:
+				fmt.Println("Invalid list option. Use 'done' or 'inprogress'")
+			}
+		} else {
+			fmt.Print(lt)
+		}
 
 	case *add != "":
 		lt.Add(*add)
@@ -228,6 +233,28 @@ func Main() int {
 			fmt.Fprintln(os.Stderr, err)
 			return 1
 		}
+
+	case *update:
+		args := flag.Args()
+		if len(args) < 2 {
+			return 1
+		}
+
+		// Validate task ID
+		taskID, err := strconv.Atoi(args[0])
+		if err != nil || taskID <= 0 {
+			fmt.Fprintln(os.Stderr, "Invalid task ID")
+			return 1
+		}
+
+		description := args[1]
+
+		lt.Update(taskID, description)
+		if err := lt.Save(fileName); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			return 1
+		}
+		fmt.Println("Task updated successfully")
 
 	case *markInProgress > 0:
 		lt.UpdateStatus(*markInProgress, InProgress)

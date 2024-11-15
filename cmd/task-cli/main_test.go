@@ -63,16 +63,31 @@ func TestTaskCLI(t *testing.T) {
 		}
 	})
 
-	t.Run("DeleteTask", func(t *testing.T) {
-		cmd := exec.Command(cmdPath, "-delete", "1")
+	t.Run("UpdateStatus", func(t *testing.T) {
+		cmd := exec.Command(cmdPath, "-markInProgress", "1")
+
 		if err := cmd.Run(); err != nil {
 			t.Fatal(err)
 		}
 	})
 
-	t.Run("UpdateStatus", func(t *testing.T) {
-		cmd := exec.Command(cmdPath, "-mark-in-progress", "1")
+	t.Run("ListTaskByStatus", func(t *testing.T) {
+		cmd := exec.Command(cmdPath, "-list", "in-progress")
+		if err := cmd.Run(); err != nil {
+			t.Fatal(err)
+		}
+	})
 
+	t.Run("UpdateTaskDescription", func(t *testing.T) {
+		cmd := exec.Command(cmdPath, "-update", "1", "test task number 1 updated")
+
+		if err := cmd.Run(); err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	t.Run("DeleteTask", func(t *testing.T) {
+		cmd := exec.Command(cmdPath, "-delete", "1")
 		if err := cmd.Run(); err != nil {
 			t.Fatal(err)
 		}
