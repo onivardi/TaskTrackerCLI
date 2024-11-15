@@ -131,8 +131,8 @@ To install TaskTrackerCLI, simply clone the repository and run the `go build` co
 
 ```bash
 git clone https://github.com/onivardi/TaskTrackerCLI.git
-cd TaskTrackerCLI
-go build
+cd TaskTrackerCLI/cmd/task-cli
+go build .
 ```
 
 ## Testing
