@@ -8,8 +8,6 @@ import (
 	task "github.com/onivardi/TaskTrackerCLI"
 )
 
-// TODO: Update the all tests
-
 func TestAdd(t *testing.T) {
 	t.Parallel()
 	l := task.ListTask{
@@ -189,7 +187,7 @@ func TestUpdateStatus(t *testing.T) {
 	}
 
 	want := task.InProgress
-	got := l.Tasks[1].GetStatus()
+	got := l.Tasks[1].Status
 	if want != got {
 		t.Errorf("want %v, got %v", want, got)
 	}
@@ -221,21 +219,17 @@ func TestGetTaskByStatus(t *testing.T) {
 		3: {Id: 3, Description: "test3", Status: 0},
 		4: {Id: 4, Description: "test4", Status: 2},
 	}}
-	// l.Add("test")
-	// l.UpdateStatus(1, 1)
-	// l.Add("test2")
-	// l.UpdateStatus(2, 1)
-	// l.Add("test3")
-	// l.Add("test4")
 
 	want := map[int]task.Task{
 		1: {Id: 1, Description: "test", Status: 1},
 		2: {Id: 2, Description: "test2", Status: 1},
 	}
-	got, err := l.GetTasksByStatus(1)
+	newLT, err := l.GetTasksByStatus(1)
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	got := newLT.Tasks
 
 	if !reflect.DeepEqual(want, got) {
 		t.Errorf("want %v, got %v", want, got)

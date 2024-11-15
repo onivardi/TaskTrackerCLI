@@ -51,7 +51,7 @@ func (lt *ListTask) Add(description string) error {
 	}
 
 	lt.Tasks[newID] = t
-	defer fmt.Printf("Task added successfully (ID: %d)", newID)
+	// defer fmt.Printf("Task added successfully (ID: %d)", newID)
 	return nil
 }
 
@@ -81,9 +81,10 @@ func (lt *ListTask) GetAll(filename string) error {
 	return json.Unmarshal(file, lt)
 }
 
-func (lt ListTask) GetTasksByStatus(status Status) (map[int]Task, error) {
+// INFO: Updated to return a new ListTask with the status selected, to work with Stringer Interface -> fmt.Print()
+func (lt ListTask) GetTasksByStatus(status Status) (ListTask, error) {
 	if !validStatus[status] {
-		return nil, fmt.Errorf("invalid status; please provide a valid status")
+		return ListTask{}, fmt.Errorf("invalid status; please provide a valid status")
 	}
 	tasks := make(map[int]Task)
 	for id, task := range lt.Tasks {
@@ -91,7 +92,9 @@ func (lt ListTask) GetTasksByStatus(status Status) (map[int]Task, error) {
 			tasks[id] = task
 		}
 	}
-	return tasks, nil
+
+	lt.Tasks = tasks
+	return lt, nil
 }
 
 func (lt ListTask) Save(filename string) error {
@@ -142,10 +145,11 @@ func (t Task) GetStatus() Status {
 // String prints out a formatted list
 // Implements the fmt.Stringer interface
 // INFO: Every time the fmt.Print() is called, will be formatted
-func (lt *ListTask) String() string {
+func (lt ListTask) String() string {
 	formatted := ""
 	for _, t := range lt.Tasks {
-		prefix := "" // Symbol for incomplete tasks
+
+		prefix := ""
 
 		switch t.Status {
 		case Done:
@@ -162,6 +166,7 @@ func (lt *ListTask) String() string {
 		// Adjust the item number k to print numbers starting from 1 instead of 0
 		formatted += fmt.Sprintf("%s- %s (ID: %d)\n", prefix, t.Description, t.Id)
 	}
+
 	return formatted
 }
 
@@ -169,6 +174,8 @@ func Main() int {
 	add := flag.String("add", "", "Add a task")
 	list := flag.Bool("list", false, "List all tasks")
 	delete := flag.Int("delete", -1, "Delete a task on given ID")
+	markInProgress := flag.Int("markInProgress", -1, "Mark a task on given ID as in progress")
+	markDone := flag.Int("markDone", -1, "Mark a task on given ID as done")
 
 	// Flags for updating a task
 	// taskID := flag.Int("id", -1, "Task ID to update. Work with -description and -status")
@@ -185,27 +192,59 @@ func Main() int {
 
 	switch {
 	case *list:
+		// args := flag.Args()
 
-		// for id, item := range lt.Tasks {
-		// 	fmt.Printf("%s (ID: %d)", item.Description, id)
+		// if len(args) > 0 {
+		// 	switch args[0] {
+		// 	case "done":
+		// 		tasks, _ := lt.GetTasksByStatus(Done)
+		// 		fmt.Print(tasks)
+		//
+		// 	case "in-progress":
+		// 		tasks, _ := lt.GetTasksByStatus(InProgress)
+		// 		fmt.Print(tasks)
+		//
+		// 	default:
+		// 		fmt.Println("Invalid list option. Use 'done' or 'inprogress'")
+		// 	}
 		// }
-		fmt.Print(lt)
-	case *add != "":
 
+		// tasks, _ := lt.GetTasksByStatus(Done)
+		// lt.Tasks = tasks
+		fmt.Print(lt)
+
+	case *add != "":
 		lt.Add(*add)
 
 		if err := lt.Save(fileName); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			return 1
 		}
-	case *delete > 0:
 
+	case *delete > 0:
 		lt.Delete(*delete)
 
 		if err := lt.Save(fileName); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			return 1
 		}
+
+	case *markInProgress > 0:
+		lt.UpdateStatus(*markInProgress, InProgress)
+
+		if err := lt.Save(fileName); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			return 1
+		}
+
+	case *markDone > 0:
+		lt.UpdateStatus(*markDone, Done)
+
+		if err := lt.Save(fileName); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			return 1
+		}
+
 	default:
 		// Invalid flag provided
 		fmt.Fprintln(os.Stderr, "Invalid option")
