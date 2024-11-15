@@ -106,7 +106,6 @@ func (lt ListTask) Save(filename string) error {
 	return os.WriteFile(filename, js, 0644)
 }
 
-// TODO: Should update the updatedAt attribute too
 func (lt *ListTask) Update(id int, description string) error {
 	if _, exists := lt.Tasks[id]; !exists {
 		return fmt.Errorf("task ID %d not found; please provide a valid task ID", id)
@@ -116,14 +115,14 @@ func (lt *ListTask) Update(id int, description string) error {
 		return fmt.Errorf("description cannot be empty; please privide a valid description")
 	}
 
-	d := lt.Tasks[id]
-	d.Description = description
-	lt.Tasks[id] = d
+	t := lt.Tasks[id]
+	t.Description = description
+	t.UpdatedAt = time.Now()
+	lt.Tasks[id] = t
 
 	return nil
 }
 
-// TODO: Should update the updatedAt attribute too
 func (lt *ListTask) UpdateStatus(id int, status Status) error {
 	if _, exists := lt.Tasks[id]; !exists {
 		return fmt.Errorf("task ID %d not found; please provide a valid task ID", id)
@@ -135,7 +134,9 @@ func (lt *ListTask) UpdateStatus(id int, status Status) error {
 
 	t := lt.Tasks[id]
 	t.Status = status
+	t.UpdatedAt = time.Now()
 	lt.Tasks[id] = t
+
 	return nil
 }
 
