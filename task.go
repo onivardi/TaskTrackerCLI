@@ -70,8 +70,6 @@ func (lt *ListTask) Delete(id int) error {
 }
 
 // Read a json file and load to the ListTask map
-// FIXME: Not letting the user add tasks
-// INFO: Fixed
 func (lt *ListTask) GetAll(filename string) error {
 	file, err := os.ReadFile(filename)
 	if err != nil {
@@ -86,7 +84,6 @@ func (lt *ListTask) GetAll(filename string) error {
 	return json.Unmarshal(file, lt)
 }
 
-// INFO: Updated to return a new ListTask with the status selected, to work with Stringer Interface -> fmt.Print()
 func (lt ListTask) GetTasksByStatus(status Status) (ListTask, error) {
 	if !validStatus[status] {
 		return ListTask{}, fmt.Errorf("invalid status; please provide a valid status")

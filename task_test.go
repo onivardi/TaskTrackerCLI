@@ -11,6 +11,17 @@ import (
 
 var validInput = "test add 1"
 
+func createListTasksData() task.ListTask {
+	return task.ListTask{
+		Tasks: map[int]task.Task{
+			1: {Id: 1, Description: "test", Status: 2},
+			2: {Id: 2, Description: "test2", Status: 1},
+			3: {Id: 3, Description: "test3", Status: 0},
+			4: {Id: 4, Description: "test4", Status: 2},
+		},
+	}
+}
+
 func TestAdd_AddATaskWithValidInput(t *testing.T) {
 	t.Parallel()
 	l := task.ListTask{
@@ -22,11 +33,11 @@ func TestAdd_AddATaskWithValidInput(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	want := 1
-	got := len(l.Tasks)
+	wantCount := 1
+	gotCount := len(l.Tasks)
 
-	if want != got {
-		t.Errorf("Want %d, Got %d", want, got)
+	if wantCount != gotCount {
+		t.Errorf("Want %d, Got %d", wantCount, gotCount)
 	}
 }
 
@@ -54,45 +65,38 @@ func TestAdd_ReturnsErrorForInvalidInput(t *testing.T) {
 	}
 }
 
-func TestDelete(t *testing.T) {
+func TestDelete_DeleteATaskWithValidId(t *testing.T) {
 	t.Parallel()
-	l := task.ListTask{
-		Tasks: make(map[int]task.Task),
-	}
 
-	tasks := []string{
-		"build todo list cli",
-		"learn how to test in go",
-	}
-	for _, t := range tasks {
-		_ = l.Add(t)
-	}
-	err := l.Delete(2)
+	lt := createListTasksData()
+	beforeLen := len(lt.Tasks)
+	t.Logf("before, data size: %d", beforeLen)
+
+	err := lt.Delete(2)
 	if err != nil {
 		t.Fatal(err)
 	}
+	afterLen := len(lt.Tasks)
+	t.Logf("After, data size: %d", afterLen)
 
-	wantCount := 1
-	gotCount := len(l.Tasks)
+	wantCount := beforeLen - 1
+	gotCount := afterLen
 	if wantCount != gotCount {
 		t.Errorf("expected %d tasks after deletion, got %d", wantCount, gotCount)
 	}
 }
 
-func TestDeleteInvalidInputID(t *testing.T) {
+func TestDelete_ReturnsErrorWithInvalidId(t *testing.T) {
 	t.Parallel()
-	l := task.ListTask{
-		Tasks: make(map[int]task.Task),
-	}
 
-	tasks := []string{
-		"build todo list cli",
-		"learn how to test in go",
-	}
-	for _, t := range tasks {
-		_ = l.Add(t)
-	}
-	err := l.Delete(0)
+	lt := createListTasksData()
+	beforeLen := len(lt.Tasks)
+	t.Logf("before, data size: %d", beforeLen)
+
+	err := lt.Delete(0)
+	afterLen := len(lt.Tasks)
+	t.Logf("After, data size: %d", afterLen)
+
 	if err == nil {
 		t.Fatal("want error for invalid id, got nil")
 	}
