@@ -1,6 +1,7 @@
 package task_test
 
 import (
+	"encoding/json"
 	"os"
 	"reflect"
 	"strings"
@@ -22,7 +23,7 @@ func createListTasksData() task.ListTask {
 	}
 }
 
-func TestAdd_AddATaskWithValidInput(t *testing.T) {
+func TestAdd_ATaskWithValidInput(t *testing.T) {
 	t.Parallel()
 	l := task.ListTask{
 		Tasks: make(map[int]task.Task),
@@ -65,7 +66,7 @@ func TestAdd_ReturnsErrorForInvalidInput(t *testing.T) {
 	}
 }
 
-func TestDelete_DeleteATaskWithValidId(t *testing.T) {
+func TestDelete_ATaskWithValidId(t *testing.T) {
 	t.Parallel()
 
 	lt := createListTasksData()
@@ -102,38 +103,37 @@ func TestDelete_ReturnsErrorWithInvalidId(t *testing.T) {
 	}
 }
 
-func TestSaveAndGetAll(t *testing.T) {
+func TestSave_WriteToJsonFile(t *testing.T) {
 	t.Parallel()
 
-	l := task.ListTask{
-		Tasks: make(map[int]task.Task),
-	}
-	ts := task.Task{
-		Id:          1,
-		Description: "build todo list cli",
-	}
-	l.Tasks[ts.Id] = ts
+	lt := createListTasksData()
 
 	tempFile, err := os.CreateTemp("", "testData.json")
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer os.Remove(tempFile.Name())
 
-	err = l.Save(tempFile.Name())
+	err = lt.Save(tempFile.Name())
 	if err != nil {
 		t.Fatalf("Error saving list to file: %s", err)
 	}
-	err = l.GetAll(tempFile.Name())
+
+	var savedLT task.ListTask
+	data, err := os.ReadFile(tempFile.Name())
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = json.Unmarshal(data, &savedLT)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	expected := map[int]task.Task{
-		1: {Id: 1, Description: "build todo list cli"},
-	}
-	got := l.Tasks
-	if !reflect.DeepEqual(got, expected) {
-		t.Errorf("Expected %v, got %v", expected, got)
+	want := lt.Tasks
+	got := savedLT.Tasks
+
+	if !reflect.DeepEqual(want, got) {
+		t.Fatal("want saved list tasks to be equal to the original list tasks")
 	}
 }
 
