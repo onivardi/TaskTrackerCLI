@@ -137,6 +137,38 @@ func TestSave_WriteToJsonFile(t *testing.T) {
 	}
 }
 
+func TestGetAll_LoadJsonFile(t *testing.T) {
+	lt := &task.ListTask{
+		Tasks: make(map[int]task.Task),
+	}
+
+	tmpFile, err := os.CreateTemp("", "testData.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(tmpFile.Name())
+
+	testData := []byte(`{"Tasks": {"1": {"Id":1, "Description":"Task 1", "Status": 0}, "2": {"Id":2, "Description":"Task 2", "Status":2}}}`)
+	_, err = tmpFile.Write(testData)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = lt.GetAll(tmpFile.Name())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want := map[int]task.Task{
+		1: {Id: 1, Description: "Task 1", Status: task.Todo},
+		2: {Id: 2, Description: "Task 2", Status: task.InProgress},
+	}
+
+	if !reflect.DeepEqual(want, lt.Tasks) {
+		t.Errorf("want loaded list tasks to be equal to the test data, got %+v vs %+v", lt.Tasks, want)
+	}
+}
+
 func TestUpdate(t *testing.T) {
 	t.Parallel()
 	l := task.ListTask{
