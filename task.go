@@ -116,6 +116,10 @@ func (lt *ListTask) Update(id int, description string) error {
 		return fmt.Errorf("description cannot be empty; please privide a valid description")
 	}
 
+	if len(description) > 60 {
+		return fmt.Errorf("description cannot be more than 60 words; please privide a valid description")
+	}
+
 	t := lt.Tasks[id]
 	t.Description = description
 	t.UpdatedAt = time.Now()

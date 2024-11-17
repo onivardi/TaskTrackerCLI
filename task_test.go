@@ -56,8 +56,8 @@ func TestAdd_ReturnsErrorForInvalidInput(t *testing.T) {
 			invalidInput: strings.Repeat("test", 61),
 		},
 	}
-	for _, tC := range testCases {
-		t.Run(tC.invalidInput, func(t *testing.T) {
+	for name, tC := range testCases {
+		t.Run(name, func(t *testing.T) {
 			err := lt.Add(tC.invalidInput)
 			if err == nil {
 				t.Fatal("want error for invalid input description, got nil")
@@ -169,94 +169,104 @@ func TestGetAll_LoadJsonFile(t *testing.T) {
 	}
 }
 
-func TestUpdate(t *testing.T) {
+func TestUpdate_DescriptionWithValidInput(t *testing.T) {
 	t.Parallel()
-	l := task.ListTask{
-		Tasks: make(map[int]task.Task),
-	}
+	lt := createListTasksData()
 
-	tasks := []string{
-		"build todo list cli",
-		"learn how to test in go",
-	}
-	for _, t := range tasks {
-		_ = l.Add(t)
-	}
-
-	err := l.Update(1, "update description")
+	err := lt.Update(1, "this is a new description")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	got := l.Tasks[1].Description
-	want := "update description"
+	got := lt.Tasks[1].Description
+	want := "this is a new description"
 	if got != want {
 		t.Errorf("Want %s, Got %s", want, got)
 	}
 }
 
-func TestUpdateInvalidInput(t *testing.T) {
-	t.Parallel()
+func TestUpdate_ReturnsErrorWithInvalidInput(t *testing.T) {
+	lt := createListTasksData()
 
-	l := task.ListTask{
-		Tasks: make(map[int]task.Task),
+	testCases := map[string]struct {
+		id          int
+		description string
+	}{
+		"invalid id": {
+			id:          50,
+			description: "wrong id",
+		},
+		"empty description": {
+			id:          2,
+			description: "",
+		},
+		"both invalid": {
+			id:          0,
+			description: "",
+		},
+		"more than 60 words": {
+			id:          1,
+			description: strings.Repeat("test", 61),
+		},
 	}
 
-	tasks := []string{
-		"build todo list cli",
-		"learn how to t in go",
-	}
-	for _, t := range tasks {
-		_ = l.Add(t)
-	}
-
-	// wrong id
-	err := l.Update(3, "this id does not exist")
-	if err == nil {
-		t.Fatal("want error for invalid id, got nil")
-	}
-	// empty description
-	err = l.Update(2, "")
-	if err == nil {
-		t.Fatal("want error for invalid description, got nil")
+	for name, tC := range testCases {
+		t.Run(name, func(t *testing.T) {
+			err := lt.Update(tC.id, tC.description)
+			if err == nil {
+				t.Fatal("want error for invalid input, got nil")
+			}
+		})
 	}
 }
 
-func TestUpdateStatus(t *testing.T) {
+func TestUpdateStatus_WithValidInputId(t *testing.T) {
 	t.Parallel()
 
-	l := task.ListTask{Tasks: make(map[int]task.Task)}
-	l.Add("test")
+	lt := createListTasksData()
 
-	err := l.UpdateStatus(1, 2)
+	err := lt.UpdateStatus(1, task.InProgress)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	want := task.InProgress
-	got := l.Tasks[1].Status
+	got := lt.Tasks[1].Status
 	if want != got {
 		t.Errorf("want %v, got %v", want, got)
 	}
 }
 
-func TestUpdateStatusInvalidInput(t *testing.T) {
-	t.Parallel()
-	l := task.ListTask{Tasks: make(map[int]task.Task)}
-	l.Add("test")
-	err := l.UpdateStatus(0, 1)
-	if err == nil {
-		t.Fatal("want error for invalid id, got nil")
-	}
+func TestUpdateStatus_ReturnsErrorWithInvalidInput(t *testing.T) {
+	lt := createListTasksData()
 
-	err = l.UpdateStatus(1, 999)
-	if err == nil {
-		t.Fatal("want error for invalid status, got nil")
+	testCases := map[string]struct {
+		id     int
+		status task.Status
+	}{
+		"invalid id": {
+			id:     0,
+			status: task.Done,
+		},
+		"invalid status": {
+			id:     1,
+			status: 999,
+		},
+		"invalid both": {
+			id:     0,
+			status: 999,
+		},
+	}
+	for name, tC := range testCases {
+		t.Run(name, func(t *testing.T) {
+			err := lt.UpdateStatus(tC.id, tC.status)
+			if err == nil {
+				t.Fatal("want error for invalid input, got nil")
+			}
+		})
 	}
 }
 
-// FIXME: its returning createdAt and updatedAt
-// INFO: Fixed
 func TestGetTaskByStatus(t *testing.T) {
 	t.Parallel()
 
