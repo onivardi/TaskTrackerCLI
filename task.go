@@ -43,6 +43,10 @@ func (lt *ListTask) Add(description string) error {
 	if description == "" {
 		return fmt.Errorf("description cannot be empty; please privide a valid description")
 	}
+
+	if len(description) > 60 {
+		return fmt.Errorf("description cannot be more than 60 words; please privide a valid description")
+	}
 	newID := len(lt.Tasks) + 1
 	t := Task{
 		Id:          newID,
@@ -252,7 +256,10 @@ Examples:
 		}
 
 	case *add != "":
-		lt.Add(*add)
+		if err := lt.Add(*add); err != nil {
+			fmt.Fprintln(os.Stderr, "Error adding task:", err)
+			return 1
+		}
 		if err := lt.Save(fileName); err != nil {
 			fmt.Fprintln(os.Stderr, "Error saving tasks:", err)
 			return 1

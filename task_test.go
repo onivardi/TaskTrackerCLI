@@ -3,43 +3,54 @@ package task_test
 import (
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 
 	task "github.com/onivardi/TaskTrackerCLI"
 )
 
-func TestAdd(t *testing.T) {
+var validInput = "test add 1"
+
+func TestAdd_AddATaskWithValidInput(t *testing.T) {
 	t.Parallel()
 	l := task.ListTask{
 		Tasks: make(map[int]task.Task),
 	}
 
-	want := "How to Become Sofware Engineer"
-
-	err := l.Add(want)
+	err := l.Add(validInput)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	got := l.Tasks[1].Description
+	want := 1
+	got := len(l.Tasks)
 
 	if want != got {
-		t.Errorf("Want %s, Got %s", want, got)
+		t.Errorf("Want %d, Got %d", want, got)
 	}
 }
 
-func TestAddInvalidInput(t *testing.T) {
-	t.Parallel()
-	l := task.ListTask{
-		Tasks: make(map[int]task.Task),
+func TestAdd_ReturnsErrorForInvalidInput(t *testing.T) {
+	lt := task.ListTask{Tasks: make(map[int]task.Task)}
+
+	testCases := map[string]struct {
+		invalidInput string
+	}{
+		"empty string": {
+			invalidInput: "",
+		},
+
+		"more than 60 words": {
+			invalidInput: strings.Repeat("test", 61),
+		},
 	}
-
-	desc := ""
-
-	err := l.Add(desc)
-
-	if err == nil {
-		t.Fatal("want error for invalid input description, got nil")
+	for _, tC := range testCases {
+		t.Run(tC.invalidInput, func(t *testing.T) {
+			err := lt.Add(tC.invalidInput)
+			if err == nil {
+				t.Fatal("want error for invalid input description, got nil")
+			}
+		})
 	}
 }
 
