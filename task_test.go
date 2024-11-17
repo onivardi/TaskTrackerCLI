@@ -256,6 +256,10 @@ func TestUpdateStatus_ReturnsErrorWithInvalidInput(t *testing.T) {
 			id:     0,
 			status: 999,
 		},
+		"status todo": {
+			id:     1,
+			status: task.Todo,
+		},
 	}
 	for name, tC := range testCases {
 		t.Run(name, func(t *testing.T) {
@@ -267,25 +271,20 @@ func TestUpdateStatus_ReturnsErrorWithInvalidInput(t *testing.T) {
 	}
 }
 
-func TestGetTaskByStatus(t *testing.T) {
+func TestGetTasksByStatus_WithValidInput(t *testing.T) {
 	t.Parallel()
 
-	l := task.ListTask{Tasks: map[int]task.Task{
-		1: {Id: 1, Description: "test", Status: 1},
-		2: {Id: 2, Description: "test2", Status: 1},
-		3: {Id: 3, Description: "test3", Status: 0},
-		4: {Id: 4, Description: "test4", Status: 2},
-	}}
+	lt := createListTasksData()
 
-	want := map[int]task.Task{
-		1: {Id: 1, Description: "test", Status: 1},
-		2: {Id: 2, Description: "test2", Status: 1},
-	}
-	newLT, err := l.GetTasksByStatus(1)
+	newLT, err := lt.GetTasksByStatus(2)
 	if err != nil {
 		t.Fatal(err)
 	}
 
+	want := map[int]task.Task{
+		1: {Id: 1, Description: "test", Status: 2},
+		4: {Id: 4, Description: "test4", Status: 2},
+	}
 	got := newLT.Tasks
 
 	if !reflect.DeepEqual(want, got) {
@@ -293,18 +292,12 @@ func TestGetTaskByStatus(t *testing.T) {
 	}
 }
 
-// FIXME: its returning createdAt and updatedAt
-// INFO: Fixed
-func TestGetTaskByStatusInvalidInput(t *testing.T) {
+func TestGetTaskByStatus_ReturnsErrorWithInvalidInput(t *testing.T) {
 	t.Parallel()
 
-	l := task.ListTask{Tasks: map[int]task.Task{
-		1: {Id: 1, Description: "test", Status: 1},
-	}}
-	// l.Add("test")
-	// l.UpdateStatus(1, 1)
+	lt := createListTasksData()
 
-	_, err := l.GetTasksByStatus(999)
+	_, err := lt.GetTasksByStatus(999)
 	if err == nil {
 		t.Fatal("want error for invalid status, got nil")
 	}
